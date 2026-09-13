@@ -1,10 +1,10 @@
-"""Railway compatibility entrypoint.
+"""Railway compatibility entrypoint for the PhishingGuard v5 website.
 
-Some deployment environments auto-discover ASGI applications as `main:app`.
-This module safely re-exports the real FastAPI application from app.py so both
-`main:app` and `app:app` start the same PhishingGuard service.
+Deployment environments may auto-discover ASGI applications as `main:app`.
+This module deliberately exports the v5 site application so that Railway,
+Docker and manual Uvicorn starts all serve the same frontend and scanner.
 """
 
-from app import app
+from site import app
 
 __all__ = ["app"]
