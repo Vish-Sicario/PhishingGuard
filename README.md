@@ -12,6 +12,10 @@ PhishingGuard v4 is an MSc Cybersecurity research prototype for phishing-risk as
 - Combined risk indicator with a separate deep-learning score, URL-indicator score and live-context score
 - Security recommendation and reason cards for each scan
 
+## Deployment
+
+Latest production target: PhishingGuard v4.
+
 ## Important limitation
 
 The deep-learning model was evaluated separately on the PhiUSIIL dataset. The live combined risk indicator is an experimental heuristic and is **not** a calibrated probability or a guarantee that a website is safe or malicious.
