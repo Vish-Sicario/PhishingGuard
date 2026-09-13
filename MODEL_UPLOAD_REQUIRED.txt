@@ -1,0 +1,5 @@
+Before deployment, upload the trained Keras file to the repository root and name it exactly:
+
+phishing_url_detector.keras
+
+The application loads this file at startup.
