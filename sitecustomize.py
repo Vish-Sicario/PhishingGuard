@@ -1,55 +1,62 @@
-"""Compatibility shim for the PhishingGuard V2 saved Keras model.
+"""PhishingGuard V2 Keras compatibility loader.
 
-The model was saved by a Keras version that serialized the TextVectorization
-vocabulary with a duplicate empty-string mask token. Newer Keras rejects that
-vocabulary while deserializing StringLookup. This shim removes only duplicate
-empty-string entries at load time. It does not retrain the model or modify any
-learned CNN weights.
+Compatibility-only patch for the saved CNN preprocessing vocabulary. It removes
+only repeated empty-string mask tokens while preserving token order and does not
+retrain or intentionally alter learned CNN weights.
 """
 
-try:
-    import tensorflow as tf
 
-    _StringLookup = tf.keras.layers.StringLookup
-    _original_set_vocabulary = _StringLookup.set_vocabulary
+def _clean_vocabulary(vocabulary):
+    try:
+        values = list(vocabulary)
+    except TypeError:
+        return vocabulary, False
 
-    def _compat_set_vocabulary(self, vocabulary, *args, **kwargs):
+    cleaned = []
+    seen_empty = False
+    changed = False
+    for value in values:
         try:
-            values = list(vocabulary)
-        except TypeError:
-            return _original_set_vocabulary(self, vocabulary, *args, **kwargs)
-
-        # Keras reserves the empty string as the mask token. Some older saved
-        # TextVectorization assets contain it more than once; current Keras
-        # raises before the model can load. Preserve order and remove only
-        # repeated empty-string entries, leaving all real tokens untouched.
-        cleaned = []
-        seen_empty = False
-        changed = False
-        for value in values:
+            is_empty = str(value) == ""
+        except Exception:
             is_empty = False
-            try:
-                is_empty = str(value) == ""
-            except Exception:
-                pass
-            if is_empty:
-                if seen_empty:
-                    changed = True
-                    continue
-                seen_empty = True
-            cleaned.append(value)
+        if is_empty:
+            if seen_empty:
+                changed = True
+                continue
+            seen_empty = True
+        cleaned.append(value)
+    return (cleaned if changed else vocabulary), changed
 
+
+def _patch_class(cls, label):
+    original = cls.set_vocabulary
+    if getattr(original, "_phishingguard_v2_patch", False):
+        return
+
+    def patched(self, vocabulary, *args, **kwargs):
+        vocabulary, changed = _clean_vocabulary(vocabulary)
         if changed:
-            print("PhishingGuard V2 compatibility: removed duplicate empty vocabulary token.")
-            vocabulary = cleaned
+            print(f"PhishingGuard V2 compatibility: removed duplicate empty vocabulary token via {label}.")
+        return original(self, vocabulary, *args, **kwargs)
 
-        return _original_set_vocabulary(self, vocabulary, *args, **kwargs)
+    patched._phishingguard_v2_patch = True
+    cls.set_vocabulary = patched
 
-    _StringLookup.set_vocabulary = _compat_set_vocabulary
-    print("PhishingGuard V2 Keras compatibility shim active.")
+
+try:
+    # Patch the public TensorFlow/Keras alias.
+    import tensorflow as tf
+    _patch_class(tf.keras.layers.StringLookup, "tf.keras")
+
+    # Keras deserialization may instantiate the internal class directly rather
+    # than the public alias, so patch that exact implementation too.
+    try:
+        from keras.src.layers.preprocessing.string_lookup import StringLookup as InternalStringLookup
+        _patch_class(InternalStringLookup, "keras.src")
+    except Exception as internal_exc:
+        print(f"PhishingGuard V2 internal Keras patch note: {internal_exc}")
+
+    print("PhishingGuard V2 Keras compatibility shim active (public + internal loader).")
 except Exception as exc:
-    # Do not hide the application's own startup diagnostics if TensorFlow itself
-    # cannot be imported; app.py will surface the real failure immediately.
     print(f"PhishingGuard V2 compatibility shim could not initialise: {exc}")
-
-# Deployment marker: compatibility loader ready for production test.
