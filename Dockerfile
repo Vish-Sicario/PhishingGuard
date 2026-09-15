@@ -16,6 +16,7 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 COPY app.py .
+COPY sitecustomize.py .
 COPY phishing_url_detector_v2.keras .
 
 EXPOSE 7860
