@@ -52,4 +52,4 @@ except Exception as exc:
     # cannot be imported; app.py will surface the real failure immediately.
     print(f"PhishingGuard V2 compatibility shim could not initialise: {exc}")
 
-# Deployment marker: clean V2 compatibility rollout.
+# Deployment marker: compatibility loader ready for production test.
