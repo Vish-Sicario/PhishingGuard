@@ -1,23 +1,36 @@
-# PhishingGuard
+# PhishingGuard V2
 
-PhishingGuard v4 is an MSc Cybersecurity research prototype for phishing-risk assessment. It combines a trained deep-learning URL classifier with explainable lexical URL intelligence and passive live checks such as HTTPS/TLS, redirects, DNS resolution, forms, links and suspicious page text.
+MSc Cybersecurity research artefact for phishing risk analysis.
 
-## v4 highlights
+## Detection Layers
 
-- Redesigned responsive cybersecurity dashboard
-- Four risk levels: Low, Medium, High and Critical
-- Explainable URL indicators including length, subdomains, suspicious tokens, encoded characters, punycode, URL shorteners, digit/hyphen counts and URL entropy
-- Passive live page analysis for redirects, forms, password/email fields, iframes, external form actions and suspicious wording
-- TLS certificate and DNS information
-- Combined risk indicator with a separate deep-learning score, URL-indicator score and live-context score
-- Security recommendation and reason cards for each scan
+1. CNN Deep Learning URL analysis
+2. URL structure intelligence
+3. DNS and TLS/network analysis
+4. Controlled live webpage analysis
+5. Explainable combined risk assessment
 
-## Deployment
+## CNN Model
 
-Latest production target: PhishingGuard v4.
+Model file: phishing_url_detector_v2.keras
 
-## Important limitation
+The CNN output is presented as a Deep Learning risk score,
+not as a calibrated probability.
 
-The deep-learning model was evaluated separately on the PhiUSIIL dataset. The live combined risk indicator is an experimental heuristic and is **not** a calibrated probability or a guarantee that a website is safe or malicious.
+## Health Check
 
-The scanner performs passive GET requests only. It does not submit forms, enter credentials, execute browser JavaScript, or intentionally download files.
+GET /health
+
+## Security
+
+The application includes controls for private/local targets,
+unsupported schemes, unsafe ports, redirect validation,
+timeouts and bounded webpage downloads.
+
+These controls reduce SSRF exposure but do not establish
+complete SSRF immunity in an unrestricted environment.
+
+## Disclaimer
+
+PhishingGuard is a cybersecurity research artefact.
+Its output does not guarantee that a website is safe or malicious.
